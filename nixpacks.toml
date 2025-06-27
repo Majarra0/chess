@@ -1,6 +1,6 @@
 [phases.setup]
 aptPkgs = [
   "gcc",
-  "default-libmysqlclient-dev",
+  "libmariadb-dev",
   "python3-dev"
 ]
