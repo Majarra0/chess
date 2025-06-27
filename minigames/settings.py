@@ -105,11 +105,11 @@ SIMPLE_JWT = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('MYSQLDATABASE', 'minigamesdb'),
-        'USER': os.environ.get('MYSQLUSER', 'root'),
+        'NAME': os.environ.get('MYSQLDATABASE', ''),
+        'USER': os.environ.get('MYSQLUSER', ''),
         'PASSWORD': os.environ.get('MYSQLPASSWORD', ''),
-        'HOST': os.environ.get('MYSQLHOST', 'localhost'),
-        'PORT': os.environ.get('MYSQLPORT', '3306'),
+        'HOST': os.environ.get('MYSQLHOST', ''),
+        'PORT': os.environ.get('MYSQLPORT', ''),
     }
 }
 
