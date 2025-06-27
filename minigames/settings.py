@@ -27,7 +27,9 @@ SECRET_KEY = 'django-insecure-d4viiy)awh!@t2ii+tgou3lhk17f6a_q=juyb!81bg#3eukqum
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "chess-production-0bf3.up.railway.app",
+]
 
 
 # Application definition
@@ -73,10 +75,6 @@ TEMPLATES = [
     },
 ]
 
-ALLOWED_HOSTS = [
-    "chess-production-0bf3.up.railway.app",
-]
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ASGI_APPLICATION = 'minigames.asgi.application'
@@ -87,7 +85,10 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [(os.environ.get('REDIS_HOST', '127.0.0.1'), int(os.environ.get('REDIS_PORT', 6379)))],
+            "hosts": [{
+                "address": (os.environ.get('REDIS_HOST'), int(os.environ.get('REDIS_PORT'))),
+                "password": os.environ.get('REDIS_PASSWORD', ''),
+            }],
         },
     },
 }
