@@ -1,6 +1,5 @@
 [phases.setup]
 aptPkgs = [
   "gcc",
-  "libmariadb-dev",
-  "python3-dev"
+  "libmariadb-dev"
 ]
