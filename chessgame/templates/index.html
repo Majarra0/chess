@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Game</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #container { 
+            max-width: 500px; 
+            width: 90%;
+            background: #fff; 
+            padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        #board { 
+            display: grid; 
+            grid-template: repeat(8, 50px) / repeat(8, 50px); 
+            border: 3px solid #333; 
+            margin: 20px auto; 
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .sq { 
+            width: 50px; 
+            height: 50px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 32px; 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .light { background: #f0d9b5; }
+        .dark { background: #b58863; }
+        .selected { 
+            background: #7fb3d3 !important;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .valid-move {
+            background: #90EE90 !important;
+        }
+        .last-move {
+            background: #FFD700 !important;
+        }
+
+        .sq:hover {
+            opacity: 0.8;
+        }
+
+        #status { 
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+            margin: 15px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        #msg { 
+            color: #d32f2f; 
+            min-height: 20px; 
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .success-msg {
+            color: #2e7d32 !important;
+        }
+
+        #controls { 
+            text-align: center;
+            margin-top: 20px; 
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background 0.3s ease;
+        }
+
+        button:hover {
+            background: #5a6fd8;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .danger-btn {
+            background: #d32f2f;
+        }
+
+        .danger-btn:hover {
+            background: #b71c1c;
+        }
+
+        .secondary-btn {
+            background: #6c757d;
+        }
+
+        .secondary-btn:hover {
+            background: #5a6268;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        #login, #signup, #join, #game { 
+            display: none; 
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .auth-links {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .auth-links a {
+            color: #667eea;
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .auth-links a:hover {
+            text-decoration: underline;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .player-info {
+            font-weight: bold;
+        }
+
+        .white-player {
+            color: #333;
+        }
+
+        .black-player {
+            color: #666;
+        }
+
+        .turn-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #4caf50;
+            display: inline-block;
+            margin-left: 5px;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .connection-status {
+            text-align: center;
+            padding: 5px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .connected {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .disconnected {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+
+        .connecting {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .auth-message {
+            text-align: center;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div id="container">
+    <!-- Login Form -->
+    <div id="login">
+        <h2>Chess Game Login</h2>
+        <div class="form-group">
+            <input id="login-username" placeholder="Username" autocomplete="username">
+        </div>
+        <div class="form-group">
+            <input id="login-password" type="password" placeholder="Password" autocomplete="current-password">
+        </div>
+        <button onclick="login()" id="loginBtn">Login</button>
+        <div id="login-msg" class="auth-message"></div>
+        <div class="auth-links">
+            <a onclick="showSignup()">Don't have an account? Sign up</a>
+        </div>
+    </div>
+
+    <!-- Sign-up Form -->
+    <div id="signup">
+        <h2>Create Account</h2>
+        <div class="form-group">
+            <input id="signup-username" placeholder="Username" autocomplete="username">
+        </div>
+        <div class="form-group">
+            <input id="signup-email" type="email" placeholder="Email" autocomplete="email">
+        </div>
+        <div class="form-group">
+            <input id="signup-password" type="password" placeholder="Password" autocomplete="new-password">
+        </div>
+        <button onclick="signup()" id="signupBtn">Sign Up</button>
+        <div id="signup-msg" class="auth-message"></div>
+        <div class="auth-links">
+            <a onclick="showLogin()">Already have an account? Login</a>
+        </div>
+    </div>
+
+    <!-- Join Room -->
+    <div id="join">
+        <h2>Join Game Room</h2>
+        <div class="form-group">
+            <input id="room" placeholder="Room Name" value="room1" autocomplete="off">
+        </div>
+        <div class="button-group">
+            <button onclick="joinRoom()" id="joinBtn">Join Room</button>
+            <button onclick="logout()" class="danger-btn">Logout</button>
+        </div>
+    </div>
+
+    <!-- Chess Game -->
+    <div id="game">
+        <div id="connection-status" class="connection-status"></div>
+        <div class="game-info">
+            <div class="player-info">
+                <span id="player-color">Playing as: </span>
+                <span id="turn-indicator"></span>
+            </div>
+            <div id="game-status">Waiting...</div>
+        </div>
+        <div id="board"></div>
+        <div id="controls">
+            <button onclick="resign()" id="resignBtn" class="danger-btn" style="display:none;">Resign</button>
+            <button onclick="requestDraw()" id="drawBtn" style="display:none;">Offer Draw</button>
+            <button onclick="leave()">Leave Room</button>
+        </div>
+        <div id="msg"></div>
+    </div>
+</div>
+
+<script>
+class ChessGame {
+    constructor() {
+        this.ws = null;
+        this.color = null;
+        this.selected = null;
+        this.boardState = {};
+        this.myTurn = false;
+        this.token = null;
+        this.validMoves = [];
+        this.lastMove = null;
+        this.gameStarted = false;
+        this.connectionStatus = 'disconnected';
+        
+        this.PIECES = {
+            'P': '♙', 'N': '♘', 'B': '♗', 'R': '♖', 'Q': '♕', 'K': '♔',
+            'p': '♟', 'n': '♞', 'b': '♝', 'r': '♜', 'q': '♛', 'k': '♚'
+        };
+        
+        this.initializeEventListeners();
+    }
+
+    initializeEventListeners() {
+        // Enter key support for login form
+        document.getElementById('login-username').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.login();
+        });
+        
+        document.getElementById('login-password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.login();
+        });
+
+        // Enter key support for signup form
+        document.getElementById('signup-username').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.signup();
+        });
+        
+        document.getElementById('signup-email').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.signup();
+        });
+        
+        document.getElementById('signup-password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.signup();
+        });
+        
+        // Enter key support for room form
+        document.getElementById('room').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') this.joinRoom();
+        });
+    }
+
+    show(section) {
+        ['login', 'signup', 'join', 'game'].forEach(s => {
+            document.getElementById(s).style.display = s === section ? 'block' : 'none';
+        });
+    }
+
+    showLogin() {
+        this.show('login');
+        this.clearAuthMessages();
+    }
+
+    showSignup() {
+        this.show('signup');
+        this.clearAuthMessages();
+    }
+
+    clearAuthMessages() {
+        document.getElementById('login-msg').textContent = '';
+        document.getElementById('signup-msg').textContent = '';
+        document.getElementById('login-msg').className = 'auth-message';
+        document.getElementById('signup-msg').className = 'auth-message';
+    }
+
+    async login() {
+        const username = document.getElementById('login-username').value.trim();
+        const password = document.getElementById('login-password').value.trim();
+        const loginBtn = document.getElementById('loginBtn');
+        const loginMsg = document.getElementById('login-msg');
+        
+        if (!username || !password) {
+            this.showAuthMsg('login-msg', 'Please enter both username and password', false);
+            return;
+        }
+
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Logging in...';
+        loginMsg.textContent = '';
+
+        try {
+            const response = await fetch('/api/token/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, password})
+            });
+            
+            const data = await response.json();
+            
+            if (data.access) {
+                this.token = data.access;
+                this.show('join');
+                this.showAuthMsg('login-msg', 'Login successful!', true);
+            } else {
+                this.showAuthMsg('login-msg', 'Invalid username or password', false);
+            }
+        } catch (error) {
+            this.showAuthMsg('login-msg', 'Connection error. Please try again.', false);
+            console.error('Login error:', error);
+        } finally {
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Login';
+        }
+    }
+
+    async signup() {
+        const username = document.getElementById('signup-username').value.trim();
+        const email = document.getElementById('signup-email').value.trim();
+        const password = document.getElementById('signup-password').value.trim();
+        const signupBtn = document.getElementById('signupBtn');
+        const signupMsg = document.getElementById('signup-msg');
+        
+        if (!username || !email || !password) {
+            this.showAuthMsg('signup-msg', 'Please fill in all fields', false);
+            return;
+        }
+
+        if (!this.isValidEmail(email)) {
+            this.showAuthMsg('signup-msg', 'Please enter a valid email address', false);
+            return;
+        }
+
+        if (password.length < 6) {
+            this.showAuthMsg('signup-msg', 'Password must be at least 6 characters long', false);
+            return;
+        }
+
+        signupBtn.disabled = true;
+        signupBtn.textContent = 'Creating Account...';
+        signupMsg.textContent = '';
+
+        try {
+            const response = await fetch('/api/register/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({username, email, password})
+            });
+            
+            const data = await response.json();
+            
+            if (response.ok) {
+                this.showAuthMsg('signup-msg', 'Account created successfully! Please login.', true);
+                // Clear form fields
+                document.getElementById('signup-username').value = '';
+                document.getElementById('signup-email').value = '';
+                document.getElementById('signup-password').value = '';
+                
+                // Switch to login after a short delay
+                setTimeout(() => {
+                    this.showLogin();
+                    // Pre-fill username in login form
+                    document.getElementById('login-username').value = username;
+                }, 2000);
+            } else {
+                // Handle specific error messages from the server
+                if (data.username) {
+                    this.showAuthMsg('signup-msg', `Username: ${data.username[0]}`, false);
+                } else if (data.email) {
+                    this.showAuthMsg('signup-msg', `Email: ${data.email[0]}`, false);
+                } else if (data.password) {
+                    this.showAuthMsg('signup-msg', `Password: ${data.password[0]}`, false);
+                } else if (data.error) {
+                    this.showAuthMsg('signup-msg', data.error, false);
+                } else {
+                    this.showAuthMsg('signup-msg', 'Registration failed. Please try again.', false);
+                }
+            }
+        } catch (error) {
+            this.showAuthMsg('signup-msg', 'Connection error. Please try again.', false);
+            console.error('Signup error:', error);
+        } finally {
+            signupBtn.disabled = false;
+            signupBtn.textContent = 'Sign Up';
+        }
+    }
+
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    showAuthMsg(elementId, msg, isSuccess) {
+        const msgEl = document.getElementById(elementId);
+        msgEl.textContent = msg;
+        msgEl.className = `auth-message ${isSuccess ? 'success-msg' : ''}`;
+    }
+
+    logout() {
+        this.token = null;
+        this.resetGame();
+        this.show('login');
+    }
+
+    joinRoom() {
+        const room = document.getElementById('room').value.trim();
+        if (!room) {
+            this.showMsg('Please enter a room name');
+            return;
+        }
+        
+        this.show('game');
+        this.updateConnectionStatus('connecting');
+        
+        const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+        const wsUrl = `${protocol}://${location.host}/ws/chessgame/${room}/?token=${this.token}`;
+        
+        this.ws = new WebSocket(wsUrl);
+        
+        this.ws.onopen = () => {
+            this.updateConnectionStatus('connected');
+            this.showMsg('Connected to room', true);
+        };
+        
+        this.ws.onclose = (event) => {
+            this.updateConnectionStatus('disconnected');
+            if (event.wasClean) {
+                this.showMsg('Disconnected from room');
+            } else {
+                this.showMsg('Connection lost');
+            }
+        };
+        
+        this.ws.onerror = (error) => {
+            this.updateConnectionStatus('disconnected');
+            this.showMsg('Connection error');
+            console.error('WebSocket error:', error);
+        };
+        
+        this.ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                this.handleMessage(data);
+            } catch (error) {
+                console.error('Message parsing error:', error);
+            }
+        };
+    }
+
+    updateConnectionStatus(status) {
+        this.connectionStatus = status;
+        const statusEl = document.getElementById('connection-status');
+        statusEl.className = `connection-status ${status}`;
+        
+        switch (status) {
+            case 'connected':
+                statusEl.textContent = '🟢 Connected';
+                break;
+            case 'connecting':
+                statusEl.textContent = '🟡 Connecting...';
+                break;
+            case 'disconnected':
+                statusEl.textContent = '🔴 Disconnected';
+                break;
+        }
+    }
+
+    handleMessage(data) {
+        if (data.error) {
+            this.showMsg(data.error);
+            return;
+        }
+        if (data.color) {
+            this.color = data.color;
+            this.gameStarted = true;
+            document.getElementById('player-color').textContent = `Playing as: ${this.color}`;
+            document.getElementById('resignBtn').style.display = 'inline-block';
+            document.getElementById('drawBtn').style.display = 'inline-block';
+        }
+        if (data.fen) {
+            this.drawBoard(data.fen);
+            const activeColor = data.fen.split(' ')[1];
+            this.myTurn = (activeColor === (this.color === 'white' ? 'w' : 'b'));
+            this.updateGameStatus();
+        }
+        if (data.move) {
+            this.lastMove = data.move;
+            this.highlightLastMove();
+        }
+        
+        if (data.valid_moves) {
+            this.validMoves = data.valid_moves;
+        }
+        
+        if (data.game_over) {
+            this.handleGameOver(data.game_over);
+        }
+        
+        if (data.draw_offer) {
+            if (confirm('Your opponent offers a draw. Accept?')) {
+                this.ws.send(JSON.stringify({ action: 'accept_draw' }));
+            } else {
+                this.ws.send(JSON.stringify({ action: 'decline_draw' }));
+            }
+        }
+        if (data.draw_declined) {
+            this.showMsg('Your draw offer was declined.');
+        }
+    }
+
+    updateGameStatus() {
+        const statusEl = document.getElementById('game-status');
+        const indicator = document.getElementById('turn-indicator');
+        
+        if (this.myTurn) {
+            statusEl.textContent = 'Your turn';
+            indicator.innerHTML = '<span class="turn-indicator"></span>';
+        } else {
+            statusEl.textContent = "Opponent's turn";
+            indicator.innerHTML = '';
+        }
+    }
+
+    drawBoard(fen) {
+        const board = document.getElementById('board');
+        board.innerHTML = '';
+        this.boardState = {};
+
+        const [position] = fen.split(' ');
+        const rows = position.split('/');
+
+        // Create squares in the correct order for display
+        for (let displayRow = 0; displayRow < 8; displayRow++) {
+            for (let displayCol = 0; displayCol < 8; displayCol++) {
+                // Calculate the actual rank and file based on player color
+                let rank, file;
+                
+                if (this.color === 'black') {
+                    // For black player: flip both rank and file
+                    rank = displayRow;      // rank 1 at top, rank 8 at bottom
+                    file = 7 - displayCol;  // file h at left, file a at right
+                } else {
+                    // For white player: normal orientation
+                    rank = 7 - displayRow;  // rank 8 at top, rank 1 at bottom
+                    file = displayCol;      // file a at left, file h at right
+                }
+
+                // Convert to square notation (e.g., "a1", "h8")
+                const fileChar = String.fromCharCode(97 + file); // 'a' + file
+                const rankChar = (rank + 1).toString();
+                const square = fileChar + rankChar;
+
+                // Get the piece from the FEN
+                const fenRow = rows[7 - rank]; // FEN rows are ordered from rank 8 to rank 1
+                const piece = this.getPieceFromFenRow(fenRow, file);
+                
+                // Store the piece in boardState
+                this.boardState[square] = piece;
+                
+                // Create the visual square
+                this.createSquare(displayRow, displayCol, square, piece);
+            }
+        }
+
+        this.highlightLastMove();
+    }
+
+    getPieceFromFenRow(fenRow, targetFile) {
+        let currentFile = 0;
+        
+        for (const char of fenRow) {
+            if (isNaN(char)) {
+                // It's a piece
+                if (currentFile === targetFile) {
+                    return char;
+                }
+                currentFile++;
+            } else {
+                // It's a number indicating empty squares
+                const emptySquares = parseInt(char);
+                if (currentFile <= targetFile && targetFile < currentFile + emptySquares) {
+                    return null; // Empty square
+                }
+                currentFile += emptySquares;
+            }
+        }
+        
+        return null; // Empty square
+    }
+
+    createSquare(row, col, square, piece) {
+        const squareEl = document.createElement('div');
+        squareEl.className = `sq ${(row + col) % 2 ? 'dark' : 'light'}`;
+        squareEl.dataset.square = square;
+        squareEl.textContent = piece ? this.PIECES[piece] || '' : '';
+        squareEl.onclick = () => this.onSquareClick(squareEl);
+        document.getElementById('board').appendChild(squareEl);
+    }
+
+    onSquareClick(squareEl) {
+        if (!this.myTurn || !this.color || !this.gameStarted) return;
+
+        const square = squareEl.dataset.square;
+        const piece = this.boardState[square];
+
+        if (this.selected) {
+            if (this.selected === square) {
+                // Deselect if clicking the same square
+                this.clearSelection();
+            } else if (piece && this.isMyPiece(piece)) {
+                // Switch selection to the new piece
+                this.selectSquare(square);
+                this.highlightValidMoves(square);
+            } else {
+                // Attempt move
+                this.sendMove(this.selected, square);
+                this.clearSelection();
+            }
+        } else {
+            if (piece && this.isMyPiece(piece)) {
+                this.selectSquare(square);
+                this.highlightValidMoves(square);
+            }
+        }
+    }
+
+    isMyPiece(piece) {
+        const isWhitePiece = 'PNBRQK'.includes(piece);
+        const isBlackPiece = 'pnbrqk'.includes(piece);
+        return (this.color === 'white' && isWhitePiece) || (this.color === 'black' && isBlackPiece);
+    }
+
+    selectSquare(square) {
+        this.clearSelection();
+        this.selected = square;
+        const squareEl = document.querySelector(`[data-square="${square}"]`);
+        if (squareEl) {
+            squareEl.classList.add('selected');
+        }
+    }
+
+    highlightValidMoves(square) {
+        // Clear previous highlights
+        document.querySelectorAll('.valid-move').forEach(el => {
+            el.classList.remove('valid-move');
+        });
+        
+        // This would need to be implemented based on your backend's valid moves data
+        // For now, we'll skip this feature
+    }
+
+    highlightLastMove() {
+        document.querySelectorAll('.last-move').forEach(el => {
+            el.classList.remove('last-move');
+        });
+        
+        if (this.lastMove) {
+            const fromEl = document.querySelector(`[data-square="${this.lastMove.from}"]`);
+            const toEl = document.querySelector(`[data-square="${this.lastMove.to}"]`);
+            if (fromEl) fromEl.classList.add('last-move');
+            if (toEl) toEl.classList.add('last-move');
+        }
+    }
+
+    clearSelection() {
+        document.querySelectorAll('.selected, .valid-move').forEach(el => {
+            el.classList.remove('selected', 'valid-move');
+        });
+        this.selected = null;
+    }
+
+    sendMove(from, to) {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            // Detect pawn promotion
+            const piece = this.boardState[from];
+            const isPawn = piece && (piece === 'P' || piece === 'p');
+            const toRank = to[1];
+            let move = { from, to };
+            if (isPawn && ((piece === 'P' && toRank === '8') || (piece === 'p' && toRank === '1'))) {
+                // Ask for promotion piece
+                let promotion = prompt('Promote to (q, r, b, n):', 'q');
+                if (!promotion || !"qrbn".includes(promotion.toLowerCase())) {
+                    promotion = 'q';
+                }
+                move.promotion = promotion.toLowerCase();
+            }
+            this.ws.send(JSON.stringify({ move }));
+        }
+    }
+
+    resign() {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN && confirm('Are you sure you want to resign?')) {
+            this.ws.send(JSON.stringify({
+                action: 'resign'
+            }));
+        }
+    }
+
+    requestDraw() {
+        if (this.ws && this.ws.readyState === WebSocket.OPEN && confirm('Offer a draw to your opponent?')) {
+            this.ws.send(JSON.stringify({
+                action: 'draw_offer'
+            }));
+            this.showMsg('Draw offer sent', true);
+        }
+    }
+
+    handleDrawOffer() {
+        if (confirm('Your opponent offers a draw. Accept?')) {
+            this.ws.send(JSON.stringify({
+                action: 'accept_draw'
+            }));
+        } else {
+            this.ws.send(JSON.stringify({
+                action: 'decline_draw'
+            }));
+        }
+    }
+
+    handleGameOver(result) {
+        this.showMsg(result);
+        this.myTurn = false;
+        this.gameStarted = false;
+        document.getElementById('game-status').textContent = 'Game Over';
+        document.getElementById('turn-indicator').innerHTML = '';
+        document.getElementById('resignBtn').style.display = 'none';
+        document.getElementById('drawBtn').style.display = 'none';
+    }
+
+    leave() {
+        if (this.ws) {
+            this.ws.close();
+        }
+        this.resetGame();
+        this.show('join');
+    }
+
+    resetGame() {
+        this.color = null;
+        this.selected = null;
+        this.boardState = {};
+        this.myTurn = false;
+        this.validMoves = [];
+        this.lastMove = null;
+        this.gameStarted = false;
+        this.clearSelection();
+        document.getElementById('msg').textContent = '';
+        document.getElementById('board').innerHTML = '';
+        document.getElementById('game-status').textContent = 'Waiting...';
+        document.getElementById('turn-indicator').innerHTML = '';
+    }
+
+    showMsg(msg, isSuccess = false) {
+        const msgEl = document.getElementById('msg');
+        msgEl.textContent = msg;
+        msgEl.className = isSuccess ? 'success-msg' : '';
+        
+        // Clear message after 5 seconds
+        setTimeout(() => {
+            if (msgEl.textContent === msg) {
+                msgEl.textContent = '';
+                msgEl.className = '';
+            }
+        }, 5000);
+    }
+
+    initialize() {
+        this.token = null;
+        this.show('login');
+    }
+}
+
+// Global functions for onclick handlers
+let game;
+
+function login() { game.login(); }
+function signup() { game.signup(); }
+function showLogin() { game.showLogin(); }
+function showSignup() { game.showSignup(); }
+function logout() { game.logout(); }
+function joinRoom() { game.joinRoom(); }
+function resign() { game.resign(); }
+function requestDraw() { game.requestDraw(); }
+function leave() { game.leave(); }
+
+// Initialize the game when page loads
+window.addEventListener('load', () => {
+    game = new ChessGame();
+    game.initialize();
+});
+</script>
+</body>
+</html>
