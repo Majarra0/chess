@@ -41,7 +41,6 @@ class ChessConsumer(AsyncWebsocketConsumer):
 
         from .models import ChessGame, ChessMove
         user = self.scope["user"]
-        print("WebSocket connect user:", user, "is_authenticated:", getattr(user, "is_authenticated", None))
         if not user or not user.is_authenticated:
             await self.close()
             return
