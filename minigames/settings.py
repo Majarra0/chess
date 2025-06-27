@@ -81,17 +81,22 @@ ASGI_APPLICATION = 'minigames.asgi.application'
 
 WSGI_APPLICATION = 'minigames.wsgi.application'
 
+import urllib.parse
+
+redis_host = os.environ.get('REDISHOST', '127.0.0.1')
+redis_port = os.environ.get('REDISPORT', '6379')
+redis_password = os.environ.get('REDISPASSWORD', '')
+
+if redis_password:
+    redis_url = f"redis://:{urllib.parse.quote(redis_password)}@{redis_host}:{redis_port}/0"
+else:
+    redis_url = f"redis://{redis_host}:{redis_port}/0"
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [{
-                "address": (
-                    os.environ.get('REDISHOST', '127.0.0.1'),
-                    int(os.environ.get('REDISPORT', 6379))
-                ),
-                "password": os.environ.get('REDIS_PASSWORD', ''),
-            }],
+            "hosts": [redis_url],
         },
     },
 }
