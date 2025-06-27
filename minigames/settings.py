@@ -73,6 +73,10 @@ TEMPLATES = [
     },
 ]
 
+ALLOWED_HOSTS = [
+    "chess-production-0bf3.up.railway.app",
+]
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 ASGI_APPLICATION = 'minigames.asgi.application'
